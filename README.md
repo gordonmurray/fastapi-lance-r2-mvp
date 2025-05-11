@@ -41,7 +41,7 @@ This project explores using the Lance file format to store and search image vect
 
 #### 🚀 Storage Performance
 
-- [ ] Store the Lance dataset in Cloudflare R2
+- [x] Store the Lance dataset in Cloudflare R2
 - [ ] Measure time to:
   - Append a record
   - Run a vector search
@@ -72,11 +72,22 @@ This project explores using the Lance file format to store and search image vect
 
 The files and data will end up in a direct structure as follows:
 
-{r2_bucket_name}/images/{sha256}.{ext}
-{r2_bucket_name}/images.lance/_transactions/*.txn
-{r2_bucket_name}/images.lance/_versions/*.manifest
-{r2_bucket_name}/images.lance/data/*.lance
+```
+r2-bucket-name/
+├── images/
+│   └── {sha256}.{ext}               # Original uploaded image (e.g. jpg, png)
+├── images.lance/
+│   ├── _transactions/
+│   │   └── *.txn                    # Transaction logs (append-only)
+│   ├── _versions/
+│   │   └── *.manifest               # Manifest files for each version
+│   └── data/
+│       └── *.lance                  # Binary fragments containing vector rows
+```
 
+* Each uploaded image is saved under images/{sha256}.{ext}, ensuring no duplicates.
+* The images.lance/ directory is a Lance dataset storing all vector metadata and is append-only.
+* Lance maintains internal versioning and transactional integrity via _transactions/ and _versions/.
 
 
 #### Single image test
@@ -114,4 +125,24 @@ for file in *.jpg; do
     echo "-----------------------------"
   fi
 done
+```
+
+#### Search results
+
+Perform a query string search as follows:
+
+https://fastapi-lance-r2-mvp.fly.dev/search?text=golf%20ball
+
+
+```
+{
+  "query": "golf ball\"",
+  "results": [
+    {
+      "id": "images/b82883249aa34e702b733a4bbeb5e4b22c32422ad4b605c631b606d6298d2691.jpg",
+      "path": "s3://fastapi-lance-r2-mvp/images/b82883249aa34e702b733a4bbeb5e4b22c32422ad4b605c631b606d6298d2691.jpg",
+      "_distance": 1.4301637411117554
+    }
+  ]
+}
 ```

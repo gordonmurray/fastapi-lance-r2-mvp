@@ -23,5 +23,5 @@ fly secrets set \
 ```
 curl -X POST \
   -F "file=@image.jpg" \
-  https://fastapi-lance-r2-mvp.fly.dev/vectorize
+  https://fastapi-lance-r2-mvp.fly.dev/vectorize_and_store
 ```
