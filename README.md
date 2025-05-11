@@ -13,16 +13,16 @@ This project explores using the Lance file format to store and search image vect
 
 #### ✅ Core Functionality
 
-- [ ] Store a single image with its vector embedding in a Lance dataset
-- [ ] Verify vector is correctly stored and retrievable
-- [ ] Observe which files/folders are created in the Lance directory (e.g., `data/`, `index/`, `manifest/`)
+- [x] Store a single image with its vector embedding in a Lance dataset
+- [x] Verify vector is correctly stored and retrievable
+- [x] Observe which files/folders are created in the Lance directory (e.g., `data/`, `index/`, `manifest/`)
 
 #### 📈 Appending Data
 
-- [ ] Add 5–10 more image+vector entries to the same Lance dataset
-- [ ] Confirm that appends succeed without data corruption
-- [ ] Observe which files are modified or appended
-- [ ] Note any increase in latency for reads or writes
+- [x] Add 5–10 more image+vector entries to the same Lance dataset
+- [x] Confirm that appends succeed without data corruption
+- [x] Observe which files are modified or appended
+- [x] Note any increase in latency for reads or writes
 
 #### ❌ Deleting Data
 
@@ -62,10 +62,56 @@ This project explores using the Lance file format to store and search image vect
 - [ ] Measure how many bytes are downloaded (R2 / S3)
 - [ ] Confirm expected columnar behavior (partial reads instead of full dataset)
 
-### Optional Future Experiments
+### Future Experiments
 
-- Compare Lance vs Parquet in size and search performance
 - Explore time travel/versioning capabilities of Lance
 - Build a simple UI to test image search UX (e.g., SvelteKit)
 - Wrap Lance search into a FastAPI endpoint with caching
 
+### Testing
+
+The files and data will end up in a direct structure as follows:
+
+{r2_bucket_name}/images/{sha256}.{ext}
+{r2_bucket_name}/images.lance/_transactions/*.txn
+{r2_bucket_name}/images.lance/_versions/*.manifest
+{r2_bucket_name}/images.lance/data/*.lance
+
+
+
+#### Single image test
+
+```
+curl -X POST \
+  -F "file=@your_image.jpg" \
+  https://fastapi-lance-r2-mvp.fly.dev/vectorize_and_store
+```
+
+#### Multiple image test
+
+```
+#!/bin/bash
+
+ENDPOINT="https://fastapi-lance-r2-mvp.fly.dev/vectorize_and_store"
+
+for file in *.jpg; do
+  if [[ -f "$file" ]]; then
+    echo "Uploading: $file"
+
+    time_start=$(date +%s%3N)
+
+    response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -F "file=@$file" "$ENDPOINT")
+
+    time_end=$(date +%s%3N)
+    duration=$((time_end - time_start))
+
+    http_status=$(echo "$response" | grep HTTP_STATUS | cut -d':' -f2)
+    body=$(echo "$response" | sed '/HTTP_STATUS/d')
+
+    echo "Status: $http_status"
+    echo "Response: $body"
+    echo "Time taken: ${duration} ms"
+    echo "-----------------------------"
+  fi
+done
+```
