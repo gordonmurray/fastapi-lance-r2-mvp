@@ -32,9 +32,9 @@ This project explores using the Lance file format to store and search image vect
 
 #### 🔍 Vector Search
 
-- [ ] Convert a text prompt (e.g. "blue car") to a vector using the same CLIP/BLIP model
-- [ ] Run a similarity search against the dataset
-- [ ] Confirm that expected results appear and are ranked appropriately
+- [x] Convert a text prompt (e.g. "blue car") to a vector using the same CLIP/BLIP model
+- [x] Run a similarity search against the dataset
+- [x] Confirm that expected results appear and are ranked appropriately
 - [ ] Measure average search latency without any index
 - [ ] Create an index (`ivf_pq` or similar) and measure search latency again
 - [ ] Compare search accuracy before and after indexing
@@ -42,7 +42,7 @@ This project explores using the Lance file format to store and search image vect
 #### 🚀 Storage Performance
 
 - [x] Store the Lance dataset in Cloudflare R2
-- [ ] Measure time to:
+- [x] Measure time to:
   - Append a record
   - Run a vector search
 - [ ] Optionally compare to:
