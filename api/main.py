@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 import boto3, lancedb, pyarrow as pa
 from botocore.client import Config
 import hashlib
+from fastapi import Query
+
 
 load_dotenv()
 
@@ -38,6 +40,12 @@ s3 = boto3.client(
     aws_secret_access_key=R2_SECRET,
     config=Config(signature_version="s3v4"),
 )
+
+# Vectorize and store an image
+# curl -X 'POST' \
+#   'https://fastapi-lance-r2-mvp.fly.dev/vectorize_and_store' \
+#   -H 'accept: application/json' \
+#   -F 'file=@/path/to/image.jpg'
 
 @app.post("/vectorize_and_store")
 async def vectorize_and_store(file: UploadFile = File(...)):
@@ -104,6 +112,11 @@ async def vectorize_and_store(file: UploadFile = File(...)):
         "stored":    True,
     }
 
+# Get stats
+# curl -X 'GET' \
+#   'https://fastapi-lance-r2-mvp.fly.dev/stats' \
+#   -H 'accept: application/json'
+
 @app.get("/stats")
 async def get_stats():
     db = lancedb.connect(
@@ -142,6 +155,57 @@ async def get_stats():
         "tablePath": f"s3://{R2_BUCKET}/vectors/images.lance"
     }
 
-@app.get("/health")
-async def health_check():
-    return {"status": "ok"}
+# Search images
+# curl -X 'GET' \
+#   'https://fastapi-lance-r2-mvp.fly.dev/search?text=dog' \
+#   -H 'accept: application/json'
+
+@app.get("/search")
+async def search_images(text: str = Query(..., description="Text to search for")):
+    if not text.strip():
+        raise HTTPException(400, "Query cannot be empty")
+
+    # Vectorize the input text
+    with torch.no_grad():
+        text_vec = model.get_text_features(
+            **processor(text=[text], return_tensors="pt")
+        ).squeeze()
+    text_vec = (text_vec / text_vec.norm()).cpu().numpy().astype("float32")
+
+    # Connect to Lance table
+    db = lancedb.connect(
+        f"s3://{R2_BUCKET}/vectors",
+        storage_options={
+            "aws_access_key_id":     R2_ACCESS,
+            "aws_secret_access_key": R2_SECRET,
+            "region":                "auto",
+            "endpoint":              R2_ENDPOINT,
+        },
+    )
+
+    try:
+        tbl = db.open_table("images")
+    except Exception as e:
+        raise HTTPException(404, detail=f"Lance table not found: {e}")
+
+    # Perform nearest-neighbor search
+    try:
+        raw_results = tbl.search(text_vec).limit(10).to_arrow().to_pylist()
+
+        # Strip vec and deduplicate by 'id'
+        seen = set()
+        results = []
+        for r in raw_results:
+            r.pop("vec", None)
+            if r["id"] not in seen:
+                seen.add(r["id"])
+                results.append(r)
+            if len(results) >= 3:
+                break
+    except Exception as e:
+        raise HTTPException(500, detail=f"Vector search failed: {e}")
+
+    return {
+        "query": text,
+        "results": results
+    }
