@@ -146,3 +146,17 @@ https://fastapi-lance-r2-mvp.fly.dev/search?text=golf%20ball
   ]
 }
 ```
+
+#### Timing Search results
+
+Performing searches using Curl
+
+```
+curl -o /dev/null -s -w "DNS: %{time_namelookup}s | Connect: %{time_connect}s | TTFB: %{time_starttransfer}s | Total: %{time_total}s\n" "https://fastapi-lance-r2-mvp.fly.dev/search?text=drink"
+```
+
+Geting back response times such as:
+
+```
+DNS: 0.001157s | Connect: 0.021120s | TTFB: 1.142971s | Total: 1.143055s
+```
