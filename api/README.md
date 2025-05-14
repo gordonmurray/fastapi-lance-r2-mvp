@@ -8,7 +8,7 @@ fly apps create fastapi-lance-r2-mvp
 fly deploy
 ```
 
-### Set secrets
+## Set secrets
 
 ```
 fly secrets set \

@@ -35,8 +35,8 @@ This project explores using the Lance file format to store and search image vect
 - [x] Convert a text prompt (e.g. "blue car") to a vector using the same CLIP/BLIP model
 - [x] Run a similarity search against the dataset
 - [x] Confirm that expected results appear and are ranked appropriately
-- [ ] Measure average search latency without any index
-- [ ] Create an index (`ivf_pq` or similar) and measure search latency again
+- [x] Measure average search latency without any index
+- [x] Create an index (`ivf_pq` or similar) and measure search latency again
 - [ ] Compare search accuracy before and after indexing
 
 #### 🚀 Storage Performance
@@ -45,10 +45,10 @@ This project explores using the Lance file format to store and search image vect
 - [x] Measure time to:
   - Append a record
   - Run a vector search
-- [ ] Optionally compare to:
+- [ ] Compare to:
   - Local disk
   - AWS S3
-  - S3 Express One Zone (if applicable)
+  - S3 Express One Zone
 
 #### 🔁 Concurrency & Durability
 
@@ -65,7 +65,7 @@ This project explores using the Lance file format to store and search image vect
 ### Future Experiments
 
 - Explore time travel/versioning capabilities of Lance
-- Build a simple UI to test image search UX (e.g., SvelteKit)
+- Build a simple UI to test image search UX (using SvelteKit)
 - Wrap Lance search into a FastAPI endpoint with caching
 
 ### Testing
@@ -136,7 +136,7 @@ https://fastapi-lance-r2-mvp.fly.dev/search?text=golf%20ball
 
 ```
 {
-  "query": "golf ball\"",
+  "query": "golf ball",
   "results": [
     {
       "id": "images/b82883249aa34e702b733a4bbeb5e4b22c32422ad4b605c631b606d6298d2691.jpg",
